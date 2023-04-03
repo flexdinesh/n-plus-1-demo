@@ -1,7 +1,6 @@
 import { FastifyReply } from "fastify";
 import SQL from "sql-template-strings";
 import { open } from "sqlite";
-// import { db } from "./";
 
 type db = Awaited<ReturnType<typeof open>>;
 

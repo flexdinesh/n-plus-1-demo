@@ -4,6 +4,8 @@ import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
 import { FastifyPluginAsync } from "fastify";
 import { user } from "../../db/user";
 import { task } from "../../db/task";
+import { post } from "../../db/post";
+import { comment } from "../../db/comment";
 
 const getSchema = (fastify: FastifyInstance) => {
   const schema = makeExecutableSchema<{ reply: FastifyReply }>({
@@ -15,18 +17,31 @@ const getSchema = (fastify: FastifyInstance) => {
 
       type Query {
         users: [User]!
+        posts(userId: ID!): [Post]!
       }
 
       type User {
         id: ID!
         name: String!
         tasks: [Task]!
+        posts: [Post]!
       }
 
       type Task {
         id: ID!
         title: String!
         status: String!
+      }
+
+      type Post {
+        id: ID!
+        title: String!
+        comments: [Comment]!
+      }
+
+      type Comment {
+        id: ID!
+        comment: String!
       }
     `,
     ],
@@ -37,13 +52,37 @@ const getSchema = (fastify: FastifyInstance) => {
             const users = await user.findAll(fastify.db, context.reply);
             return users;
           },
+          posts: async (_parent, { userId }, context) => {
+            const posts = await post.findByUserId(fastify.db, context.reply, {
+              id: userId,
+            });
+            return posts;
+          },
         },
         User: {
           tasks: async (parent, _args, context) => {
-            const t = await task.findByUserId(fastify.db, context.reply, {
+            const tasks = await task.findByUserId(fastify.db, context.reply, {
               id: parent.id,
             });
-            return t;
+            return tasks;
+          },
+          posts: async (parent, _args, context) => {
+            const posts = await post.findByUserId(fastify.db, context.reply, {
+              id: parent.id,
+            });
+            return posts;
+          },
+        },
+        Post: {
+          comments: async (parent, _args, context) => {
+            const comments = await comment.findByPostId(
+              fastify.db,
+              context.reply,
+              {
+                id: parent.id,
+              }
+            );
+            return comments;
           },
         },
       },

@@ -43,12 +43,6 @@ const users: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
     return usersWithTasks;
   });
-
-  fastify.get("-with-tasks/best", async function (request, reply) {
-    const usersWithTasks = await user.findAllWithTasks(fastify.db, reply);
-
-    return usersWithTasks;
-  });
 };
 
 export default users;
