@@ -6,6 +6,9 @@ import { user } from "../../db/user";
 import { task } from "../../db/task";
 import { post } from "../../db/post";
 import { comment } from "../../db/comment";
+import { DataProcessingQueue } from "../../lib/data-queue";
+
+const queue = new DataProcessingQueue();
 
 const getSchema = (fastify: FastifyInstance) => {
   const schema = makeExecutableSchema<{ reply: FastifyReply }>({
@@ -37,6 +40,7 @@ const getSchema = (fastify: FastifyInstance) => {
         id: ID!
         title: String!
         comments: [Comment]!
+        commentsBetter: [Comment]!
       }
 
       type Comment {
@@ -82,6 +86,25 @@ const getSchema = (fastify: FastifyInstance) => {
                 id: parent.id,
               }
             );
+            return comments;
+          },
+          commentsBetter: async (parent, _args, context) => {
+            const commentBatchFn = async (ids: number[]) => {
+              const comments = await comment.findByPostIds(
+                fastify.db,
+                context.reply,
+                { ids }
+              );
+              const map = new Map<number, any>();
+              ids.forEach((id) => {
+                const post = comments.filter((c) => c.id === id);
+                map.set(id, post);
+              });
+              return map;
+            };
+            const commentsQueue = queue.get("comments", commentBatchFn);
+            const comments = await commentsQueue.resolveInBatch(parent.id);
+
             return comments;
           },
         },

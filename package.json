@@ -14,7 +14,9 @@
     "dev": "npm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
     "dev:start": "fastify start --ignore-watch=.ts$ -w -P dist/app.js",
     "clean": "rm -rf dist",
-    "init:db": "rm sqlite.db && tsx scripts/init-db.ts"
+    "init:db": "rm sqlite.db && tsx scripts/init-db.ts",
+    "dev:queue:waterfall": "tsx src/viz/waterfall-example.ts",
+    "dev:queue:batch": "tsx src/viz/batch-example.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +29,7 @@
     "fastify": "^4.0.0",
     "fastify-cli": "^5.7.1",
     "fastify-plugin": "^4.0.0",
+    "graphql": "^16.6.0",
     "graphql-yoga": "^3.8.0",
     "sql-template-strings": "^2.2.2",
     "sqlite": "^4.1.2",
