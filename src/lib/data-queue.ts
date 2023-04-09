@@ -1,6 +1,6 @@
 import * as chalk from "chalk";
 
-export class Scheduler {
+export class BatchScheduler {
   isBatchScheduledForNextTick: boolean;
   batch: Map<
     any,
@@ -55,8 +55,8 @@ export class Scheduler {
   }
 }
 
-export class DataProcessingQueue {
-  queue: Map<string, Scheduler>;
+export class DataQueue {
+  queue: Map<string, BatchScheduler>;
 
   constructor() {
     this.queue = new Map();
@@ -68,7 +68,7 @@ export class DataProcessingQueue {
       const cleanupFn = () => {
         this.queue.delete(key);
       };
-      const newQueue = new Scheduler(batchFn, cleanupFn);
+      const newQueue = new BatchScheduler(batchFn, cleanupFn);
       this.queue.set(key, newQueue);
       return newQueue;
     }

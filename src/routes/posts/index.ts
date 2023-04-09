@@ -15,6 +15,7 @@ const parseQueryParams = (params: unknown): { userId: number } | null => {
   return null;
 };
 const users: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+  // /posts
   fastify.route({
     method: "GET",
     url: "/",
@@ -32,6 +33,7 @@ const users: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
   });
 
+  // /posts-with-comments
   fastify.route({
     method: "GET",
     url: "-with-comments",
@@ -46,12 +48,16 @@ const users: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         id: params.userId,
       });
       const postsWithComments = await Promise.all(
-        posts.map(async (p) => {
-          const c = await comment.findByPostId(fastify.db, reply, { id: p.id });
+        posts.map(async (post) => {
+          const commentsForPost = await comment.findByPostId(
+            fastify.db,
+            reply,
+            { id: post.id }
+          );
           return {
-            id: p.id,
-            title: p.title,
-            comments: c,
+            id: post.id,
+            title: post.title,
+            comments: commentsForPost,
           };
         })
       );
@@ -60,6 +66,7 @@ const users: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
   });
 
+  // /posts-with-comments/better
   fastify.route({
     method: "GET",
     url: "-with-comments/better",
@@ -74,17 +81,17 @@ const users: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         id: params.userId,
       });
       const comments = await comment.findByPostIds(fastify.db, reply, {
-        ids: posts.map((p) => p.id),
+        ids: posts.map((post) => post.id),
       });
 
-      const postsWithComments = posts.map((p) => {
-        const c = comments
-          .filter((c) => c.post_id === p.id)
-          .map((c) => ({ id: c.id, comment: c.comment }));
+      const postsWithComments = posts.map((post) => {
+        const commentsForPost = comments
+          .filter((comment) => comment.post_id === post.id)
+          .map((comment) => ({ id: comment.id, comment: comment.comment }));
         return {
-          id: p.id,
-          title: p.title,
-          comments: c,
+          id: post.id,
+          title: post.title,
+          comments: commentsForPost,
         };
       });
 

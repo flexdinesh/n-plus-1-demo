@@ -1,4 +1,4 @@
-import { DataProcessingQueue } from "../lib/data-queue";
+import { DataQueue } from "../lib/data-queue";
 import { usersAPI, postsAPI } from "./api";
 
 console.log("... sync frame starts here");
@@ -17,7 +17,7 @@ const batchFn = async (ids: number[]) => {
   return map;
 };
 
-const queue = new DataProcessingQueue();
+const queue = new DataQueue();
 
 /* invocation */
 helloFunction();
