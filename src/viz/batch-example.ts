@@ -1,4 +1,4 @@
-import { DataQueue } from "../lib/data-queue";
+import { nextBatch } from "../lib/next-batch";
 import { usersAPI, postsAPI } from "./api";
 
 console.log("... sync frame starts here");
@@ -7,25 +7,24 @@ const helloFunction = () => {
   console.log("... helloFunction() invoked");
 };
 
-const batchFn = async (ids: number[]) => {
-  const posts = await postsAPI(ids);
-  const map = new Map<number, any>();
-  ids.forEach((id) => {
-    const post = posts.find((p) => p === id);
-    map.set(id, post);
-  });
-  return map;
-};
-
-const queue = new DataQueue();
-
 /* invocation */
 helloFunction();
 usersAPI().then(async (users) => {
-  const postsQueue = queue.get("posts", batchFn);
+  const postsBatch = nextBatch({
+    key: "posts",
+    batchHandler: async (ids: number[]) => {
+      const posts = await postsAPI(ids);
+      const map = new Map<number, any>();
+      ids.forEach((id) => {
+        const post = posts.find((p) => p === id);
+        map.set(id, post);
+      });
+      return map;
+    },
+  });
   const posts = await Promise.all(
     users.map(async (u) => {
-      return postsQueue.resolveInBatch(u);
+      return postsBatch.add(u);
     })
   );
   console.log("... All posts and users resolved.");

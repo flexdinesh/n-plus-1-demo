@@ -6,9 +6,7 @@ import { user } from "../../db/user";
 import { task } from "../../db/task";
 import { post } from "../../db/post";
 import { comment } from "../../db/comment";
-import { DataQueue } from "../../lib/data-queue";
-
-const queue = new DataQueue();
+import { nextBatch } from "../../lib/next-batch";
 
 const getSchema = (fastify: FastifyInstance) => {
   const schema = makeExecutableSchema<{ reply: FastifyReply }>({
@@ -27,6 +25,7 @@ const getSchema = (fastify: FastifyInstance) => {
         id: ID!
         name: String!
         tasks: [Task]!
+        tasksBetter: [Task]!
         posts: [Post]!
       }
 
@@ -72,21 +71,23 @@ const getSchema = (fastify: FastifyInstance) => {
             return tasks;
           },
           tasksBetter: async ({ id: userId }, _args, context) => {
-            const tasksBatchFn = async (ids: number[]) => {
-              const tasks = await task.findByUserIds(
-                fastify.db,
-                context.reply,
-                { ids }
-              );
-              const map = new Map<number, any>();
-              ids.forEach((id) => {
-                const task = tasks.filter((task) => task.id === id);
-                map.set(id, task);
-              });
-              return map;
-            };
-            const tasksQueue = queue.get("tasks", tasksBatchFn);
-            const tasks = await tasksQueue.resolveInBatch(userId);
+            const tasksBatch = nextBatch({
+              key: "comments",
+              batchHandler: async (ids: number[]) => {
+                const tasks = await task.findByUserIds(
+                  fastify.db,
+                  context.reply,
+                  { ids }
+                );
+                const map = new Map<number, any>();
+                ids.forEach((id) => {
+                  const task = tasks.filter((task) => task.id === id);
+                  map.set(id, task);
+                });
+                return map;
+              },
+            });
+            const tasks = await tasksBatch.add(userId);
             return tasks;
           },
           posts: async ({ id: userId }, _args, context) => {
@@ -108,21 +109,23 @@ const getSchema = (fastify: FastifyInstance) => {
             return comments;
           },
           commentsBetter: async ({ id: postId }, _args, context) => {
-            const commentBatchFn = async (ids: number[]) => {
-              const comments = await comment.findByPostIds(
-                fastify.db,
-                context.reply,
-                { ids }
-              );
-              const map = new Map<number, any>();
-              ids.forEach((id) => {
-                const post = comments.filter((c) => c.id === id);
-                map.set(id, post);
-              });
-              return map;
-            };
-            const commentsQueue = queue.get("comments", commentBatchFn);
-            const comments = await commentsQueue.resolveInBatch(postId);
+            const commentsBatch = nextBatch({
+              key: "comments",
+              batchHandler: async (ids: number[]) => {
+                const comments = await comment.findByPostIds(
+                  fastify.db,
+                  context.reply,
+                  { ids }
+                );
+                const map = new Map<number, any>();
+                ids.forEach((id) => {
+                  const post = comments.filter((c) => c.id === id);
+                  map.set(id, post);
+                });
+                return map;
+              },
+            });
+            const comments = await commentsBatch.add(postId);
 
             return comments;
           },

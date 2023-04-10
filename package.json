@@ -15,8 +15,8 @@
     "dev:start": "fastify start --ignore-watch=.ts$ -w -P dist/app.js",
     "clean": "rm -rf dist",
     "init:db": "rm sqlite.db && tsx scripts/init-db.ts",
-    "dev:queue:waterfall": "tsx src/viz/waterfall-example.ts",
-    "dev:queue:batch": "tsx src/viz/batch-example.ts"
+    "dev:example:waterfall": "tsx src/viz/waterfall-example.ts",
+    "dev:example:batch": "tsx src/viz/batch-example.ts"
   },
   "keywords": [],
   "author": "",
