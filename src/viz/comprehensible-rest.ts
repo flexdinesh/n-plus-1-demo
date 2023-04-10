@@ -33,38 +33,3 @@ router.get("/users-with-tasks", async function (request, response) {
 
   return usersWithTasks;
 });
-
-User: {
-  tasks: async ({ id: userId }, _args, context) => {
-    // fetch tasks for each user
-    const tasks = await task.findByUserId(fastify.db, context.reply, {
-      id: userId,
-    });
-    return tasks;
-  };
-}
-
-User: {
-  tasks: async ({ id: userId }, _args, context) => {
-    // batch to collect all resolver requests that are flushed
-    // in the next execution frame using process.nextTick()
-    const tasksBatch = nextBatch({
-      key: "tasks",
-      batchHandler: async (ids: number[]) => {
-        const tasks = await task.findByUserIds(fastify.db, context.reply, {
-          ids,
-        });
-        const map = new Map<number, any>();
-        ids.forEach((id) => {
-          const task = tasks.filter((task) => task.id === id);
-          map.set(id, task);
-        });
-        return map;
-      },
-    });
-    // tasks are requested per user but resolved in batch for all users
-    // via the JavaScript magic of our next-batch util
-    const tasks = await tasksBatch.add(userId);
-    return tasks;
-  };
-}

@@ -14,12 +14,12 @@ usersAPI().then(async (users) => {
     key: "posts",
     batchHandler: async (ids: number[]) => {
       const posts = await postsAPI(ids);
-      const map = new Map<number, any>();
+      const result = new Map<number, any>();
       ids.forEach((id) => {
         const post = posts.find((p) => p === id);
-        map.set(id, post);
+        result.set(id, post);
       });
-      return map;
+      return result;
     },
   });
   const posts = await Promise.all(

@@ -6,6 +6,7 @@ import { user } from "../../db/user";
 import { task } from "../../db/task";
 import { post } from "../../db/post";
 import { comment } from "../../db/comment";
+// import { nextBatch } from "next-batch";
 import { nextBatch } from "../../lib/next-batch";
 
 const getSchema = (fastify: FastifyInstance) => {
@@ -79,7 +80,10 @@ const getSchema = (fastify: FastifyInstance) => {
                   context.reply,
                   { ids }
                 );
-                const map = new Map<number, any>();
+                const map = new Map<
+                  number,
+                  Awaited<ReturnType<typeof task.findByUserIds>>
+                >();
                 ids.forEach((id) => {
                   const task = tasks.filter((task) => task.id === id);
                   map.set(id, task);
@@ -117,7 +121,10 @@ const getSchema = (fastify: FastifyInstance) => {
                   context.reply,
                   { ids }
                 );
-                const map = new Map<number, any>();
+                const map = new Map<
+                  typeof ids[number],
+                  Awaited<ReturnType<typeof comment.findByPostIds>>
+                >();
                 ids.forEach((id) => {
                   const post = comments.filter((c) => c.id === id);
                   map.set(id, post);
@@ -126,7 +133,6 @@ const getSchema = (fastify: FastifyInstance) => {
               },
             });
             const comments = await commentsBatch.add(postId);
-
             return comments;
           },
         },
